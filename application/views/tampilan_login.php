@@ -35,6 +35,12 @@
                                     <div class="text-center">
                                         <img src="https://smkth-jakbar.com/assets/images/logo.png" alt="logo"
                                             style="width: 150px ; height: 150px;">
+                                        <h5 class="mt-2 text-center text-danger font-weight-bolder">
+                                            <span id="server-time"></span>
+                                        </h5>
+                                        <?php if ($this->session->flashdata('pesan')): ?>
+                                            <div class="mb-3"><?= $this->session->flashdata('pesan') ?></div>
+                                        <?php endif; ?>
                                         <h1 class="h4 text-gray-900 mb-4 text-uppercase font-weight-bolder mt-3">Login
                                             Siswa
                                         </h1>
@@ -46,7 +52,7 @@
                                                 placeholder="Enter Username..." />
                                         </div>
                                         <div class="form-group">
-                                            <input type="password" name="password"
+                                            <input type="text" name="password"
                                                 class="form-control form-control-user" id="exampleInputPassword"
                                                 placeholder="Password" />
                                         </div>
@@ -74,6 +80,38 @@
 
     <!-- Custom scripts for all pages-->
     <script src="<?= base_url() ?>assets/js/sb-admin-2.min.js"></script>
+
+    <script>
+        // Fungsi untuk memformat angka menjadi dua digit (misal: 7 -> 07)
+        function pad(n) {
+            return n < 10 ? '0' + n : n;
+        }
+
+        // Mengambil elemen untuk menampilkan waktu
+        var timeDisplay = document.getElementById('server-time');
+
+        // Mengambil waktu awal dari PHP dan mengubahnya menjadi objek Date JavaScript
+        // Format PHP 'd-m-Y H:i:s' perlu diubah agar bisa dibaca JavaScript
+        var serverTimeStr = "<?php echo date('Y-m-d H:i:s'); ?>";
+        var serverTime = new Date(serverTimeStr.replace(/-/g, '/'));
+
+        // Memperbarui jam setiap detik
+        setInterval(function() {
+            // Tambah 1 detik
+            serverTime.setSeconds(serverTime.getSeconds() + 1);
+
+            // Format tanggal dan waktu
+            var day = pad(serverTime.getDate());
+            var month = pad(serverTime.getMonth() + 1);
+            var year = serverTime.getFullYear();
+            var hours = pad(serverTime.getHours());
+            var minutes = pad(serverTime.getMinutes());
+            var seconds = pad(serverTime.getSeconds());
+
+            // Tampilkan waktu yang sudah diformat
+            timeDisplay.innerText = hours + ':' + minutes + ':' + seconds;
+        }, 1000);
+    </script>
 </body>
 
 </html>

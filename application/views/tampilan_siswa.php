@@ -7,7 +7,7 @@
                      <h4 class="text-uppercase"><?= $siswa['kelas'] ?></h4>
                      <h4>
                          <a class="btn btn-sm btn-danger mt-2 text-uppercase font-weight-bolder"
-                             href="<?= base_url() ?>Login/logout">Logout</a>
+                             href="<?= base_url() ?>Dashboard/logout">Logout</a>
                      </h4>
                  </div>
              </div>
