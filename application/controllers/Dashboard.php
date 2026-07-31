@@ -6,8 +6,13 @@ class Dashboard extends CI_Controller
 
     public function index()
     {
+        $this->Model_keamanan->getKeamanan();
         $sess = $this->session->userdata('username');
+        
+        $jadwal = date('Y-m-d');
+        $waktu =  date('H:i:s');
         $isi['siswa'] = $this->Model_siswa->dataSiswaID($sess);
+        $isi['ujian'] = $this->Model_ujian->data_jadwal_siswa($sess, $jadwal, $waktu);
 
         $this->load->view('templates/header');
         $this->load->view('tampilan_siswa', $isi);

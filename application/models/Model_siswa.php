@@ -25,6 +25,8 @@ WHERE a_siswa.username='$sess';";
         return $query->row_array();
     }
 
+    
+
 
 
     function simpanSiswa($data = array())
