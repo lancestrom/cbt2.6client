@@ -9,7 +9,7 @@
     <meta name="author" content="" />
 
     <title>CBT SMK TUNAS HARAPAN JAKARTA BARAT</title>
-    <link rel="icon" href="https://smkth-jakbar.com/assets/images/logo.png" />
+    <link rel="icon" href="<?= base_url() ?>assets/images/logo.png" />
 
     <!-- Custom fonts for this template-->
     <link href="<?= base_url() ?>assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
@@ -21,47 +21,57 @@
     <link href="<?= base_url() ?>assets/css/sb-admin-2.min.css" rel="stylesheet" />
 </head>
 
-<body class="bg-gradient-primary">
-    <div class="container">
-        <!-- Outer Row -->
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card o-hidden border-0 shadow-lg my-5">
-                    <div class="card-body p-0">
-                        <!-- Nested Row within Card Body -->
-                        <div class="row">
-                            <div class="col-md">
-                                <div class="p-5">
-                                    <div class="text-center">
-                                        <img src="https://smkth-jakbar.com/assets/images/logo.png" alt="logo"
-                                            style="width: 150px ; height: 150px;">
-                                        <h5 class="mt-2 text-center text-danger font-weight-bolder">
-                                            <span id="server-time"></span>
-                                        </h5>
-                                        <?php if ($this->session->flashdata('pesan')): ?>
-                                            <div class="mb-3"><?= $this->session->flashdata('pesan') ?></div>
-                                        <?php endif; ?>
-                                        <h1 class="h4 text-gray-900 mb-4 text-uppercase font-weight-bolder mt-3">Login
-                                            Siswa
-                                        </h1>
+<body class="bg-gradient-light">
+    <div class="container min-vh-100 d-flex justify-content-center align-items-center">
+        <div class="col-xl-5 col-lg-6 col-md-8">
+            <div class="card o-hidden border-0 shadow-lg">
+                <div class="card-body p-0">
+                    <!-- Nested Row within Card Body -->
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="p-5">
+                                <div class="text-center">
+                                    <img src="https://smkth-jakbar.com/assets/images/logo.png" alt="logo"
+                                        class="mb-4" style="width: 120px; height: 120px;">
+                                    <h1 class="h4 text-gray-900 mb-2 text-uppercase font-weight-bolder">Login Siswa</h1>
+                                    <p class="mb-4">Selamat datang! Silakan masuk untuk melanjutkan.</p>
+                                    <h5 class="mt-2 text-center text-danger font-weight-bolder">
+                                        <span id="server-time"></span>
+                                    </h5>
+                                </div>
+
+                                <?php if ($this->session->flashdata('pesan')): ?>
+                                    <div class="mb-3">
+                                        <?= $this->session->flashdata('pesan') ?>
                                     </div>
-                                    <form class="user" action="<?= base_url() ?>Login/proses_login" method="post">
-                                        <div class="form-group">
+                                <?php endif; ?>
+
+                                <form class="user mt-4" action="<?= base_url() ?>Login/proses_login" method="post">
+                                    <div class="form-group">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                            </div>
                                             <input type="text" class="form-control form-control-user" name="username"
-                                                id="exampleInputEmail" aria-describedby="emailHelp"
-                                                placeholder="Enter Username..." />
+                                                placeholder="Masukkan Username Anda..." required>
                                         </div>
-                                        <div class="form-group">
-                                            <input type="text" name="password"
-                                                class="form-control form-control-user" id="exampleInputPassword"
-                                                placeholder="Password" />
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                            </div>
+                                            <input type="text" name="password" class="form-control form-control-user"
+                                                placeholder="Masukkan Password Anda" required>
                                         </div>
-                                        <button type="submit" class="btn btn-primary btn-user btn-block">
-                                            Login
-                                        </button>
-                                        <hr />
-                                    </form>
-                                    <hr />
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-user btn-block font-weight-bold">
+                                        Login
+                                    </button>
+                                </form>
+                                <hr>
+                                <div class="text-center">
+                                    <span class="small">SMK Tunas Harapan Jakarta Barat &copy; <?= date('Y'); ?></span>
                                 </div>
                             </div>
                         </div>

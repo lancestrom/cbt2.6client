@@ -24,8 +24,7 @@ class Dashboard extends CI_Controller
         $this->Model_keamanan->getKeamanan();
         $sess = $this->session->userdata('username');
         $isi['siswa'] = $this->Model_siswa->dataSiswaID($sess);
-        // $isi['ujian'] = $this->Model_ujian->data_jadwal_siswa($sess, date('Y-m-d'), date('H:i:s'));
-        // $isi['detail_ujian'] = $this->Model_ujian->get_detail_ujian($id_jadwal);
+        $isi['detail_ujian'] = $this->Model_ujian->detail_ujian($sess, $id_jadwal);
 
         $this->load->view('templates/header');
         $this->load->view('detail_ujian', $isi);
