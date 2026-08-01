@@ -8,7 +8,7 @@ class Dashboard extends CI_Controller
     {
         $this->Model_keamanan->getKeamanan();
         $sess = $this->session->userdata('username');
-        
+
         $jadwal = date('Y-m-d');
         $waktu =  date('H:i:s');
         $isi['siswa'] = $this->Model_siswa->dataSiswaID($sess);
@@ -16,6 +16,19 @@ class Dashboard extends CI_Controller
 
         $this->load->view('templates/header');
         $this->load->view('tampilan_siswa', $isi);
+        $this->load->view('templates/footer');
+    }
+
+    public function detail_ujian($id_jadwal)
+    {
+        $this->Model_keamanan->getKeamanan();
+        $sess = $this->session->userdata('username');
+        $isi['siswa'] = $this->Model_siswa->dataSiswaID($sess);
+        // $isi['ujian'] = $this->Model_ujian->data_jadwal_siswa($sess, date('Y-m-d'), date('H:i:s'));
+        // $isi['detail_ujian'] = $this->Model_ujian->get_detail_ujian($id_jadwal);
+
+        $this->load->view('templates/header');
+        $this->load->view('detail_ujian', $isi);
         $this->load->view('templates/footer');
     }
 

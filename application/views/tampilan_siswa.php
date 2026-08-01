@@ -29,7 +29,7 @@
                              <h5 class="text-uppercase"><?= $row['tanggal_mulai'] ?></h5>
                              <h5 class="text-uppercase"><?= $row['waktu_mulai'] ?> - <?= $row['waktu_selesai'] ?></h5>
                              <a class="btn btn-sm btn-success mt-2 text-uppercase font-weight-bolder"
-                                 href="<?= base_url() ?>Ujian/ujian/<?= $row['id_jadwal'] ?>">Mulai</a>
+                                 href="<?= base_url() ?>Dashboard/detail_ujian/<?= $row['id_jadwal'] ?>">Mulai</a>
                          </div>
                      </div>
                  </div>
