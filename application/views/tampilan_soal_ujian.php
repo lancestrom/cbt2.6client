@@ -38,6 +38,12 @@
                                         <img src="<?= base_url('uploads/soal/' . $s['gambar']) ?>" class="img-fluid rounded shadow-sm" alt="Gambar soal">
                                     </div>
                                 <?php endif; ?>
+
+                                <input type="text" class="form-control" value="<?= $s['id_mapel'] ?>">
+                                <input type="text" class="form-control" value="<?= $s['username'] ?>">
+                                <input type="text" class="form-control" value="<?= $s['id_soal'] ?>">
+
+
                                 <h5 class="font-weight-bold mb-4" style="line-height:1.4;"><?= $s['soal'] ?></h5>
                                 <div class="list-group list-group-flush">
                                     <?php foreach (['A' => 'pilA', 'B' => 'pilB', 'C' => 'pilC', 'D' => 'pilD', 'E' => 'pilE'] as $choice => $field): ?>
