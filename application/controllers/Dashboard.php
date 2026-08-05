@@ -31,6 +31,18 @@ class Dashboard extends CI_Controller
         $this->load->view('templates/footer');
     }
 
+    public function soal_ujian_username($id_jadwal)
+    {
+        $this->Model_keamanan->getKeamanan();
+        $sess = $this->session->userdata('username');
+        $isi['siswa'] = $this->Model_ujian->soal_ujian_siswa($id_jadwal, $sess);
+        $isi['soal'] = $this->Model_ujian->soal_ujian($id_jadwal, $sess);
+
+        $this->load->view('templates/header');
+        $this->load->view('tampilan_soal_ujian', $isi);
+        $this->load->view('templates/footer');
+    }
+
     public function logout()
     {
         // Dapatkan username dari session sebelum menghancurkan session CodeIgniter

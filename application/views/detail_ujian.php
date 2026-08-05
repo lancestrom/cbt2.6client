@@ -99,7 +99,7 @@
                         <h5 class="text-uppercase font-weight-bolder"><?= $detail_ujian['tanggal_mulai'] ?></h5>
                         <h5 class="text-uppercase font-weight-bolder"><?= $detail_ujian['waktu_mulai'] ?> - <?= $detail_ujian['waktu_selesai'] ?></h5>
                         <h5 class="text-uppercase font-weight-bolder"><?= $detail_ujian['selisih_menit'] ?> menit</h5>
-                        <a class="btn btn-ujian btn-lg mt-3 text-uppercase font-weight-bolder" href="<?= base_url() ?>Dashboard/ujian/<?= $detail_ujian['id_jadwal'] ?>">Mulai Ujian</a>
+                        <a class="btn btn-ujian btn-lg mt-3 text-uppercase font-weight-bolder" href="<?= base_url() ?>Dashboard/soal_ujian_username/<?= $detail_ujian['id_jadwal'] ?>">Mulai Ujian</a>
                     </div>
                 </div>
             </div>
