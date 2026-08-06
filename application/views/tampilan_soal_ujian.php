@@ -26,7 +26,7 @@
                     </div>
                 </div>
                 <div class="card-body px-4 py-4">
-                    <form method="post" action="" id="quizForm">
+                    <form method="post" action="<?= base_url('dashboard/kirim_jawaban') ?>" id="quizForm">
                         <?php foreach ($soal as $index => $s): ?>
                             <div class="question-slide <?= $index === 0 ? 'active' : '' ?>" data-index="<?= $index ?>">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -39,10 +39,9 @@
                                     </div>
                                 <?php endif; ?>
 
-                                <input type="text" class="form-control" value="<?= $s['id_mapel'] ?>">
-                                <input type="text" class="form-control" value="<?= $s['username'] ?>">
-                                <input type="text" class="form-control" value="<?= $s['id_soal'] ?>">
-
+                                <input type="hidden" name="id_mapel[]" value="<?= $s['id_mapel'] ?>">
+                                <input type="hidden" name="username[]" value="<?= $s['username'] ?>">
+                                <input type="hidden" name="id_soal[]" value="<?= $s['id_soal'] ?>">
 
                                 <h5 class="font-weight-bold mb-4" style="line-height:1.4;"><?= $s['soal'] ?></h5>
                                 <div class="list-group list-group-flush">

@@ -43,7 +43,54 @@ class Dashboard extends CI_Controller
         $this->load->view('templates/footer');
     }
 
-   
+    public function kirim_jawaban()
+    {
+        $this->Model_keamanan->getKeamanan();
+
+        $usernames = $this->input->post('username');
+        $id_mapel = $this->input->post('id_mapel');
+        $id_soal = $this->input->post('id_soal');
+        $jawaban = $this->input->post('jawaban');
+
+        if (!is_array($id_soal)) {
+            redirect('dashboard');
+            return;
+        }
+
+        foreach ($id_soal as $index => $soal_id) {
+            $user = isset($usernames[$index]) ? $usernames[$index] : $this->session->userdata('username');
+            $mapel = isset($id_mapel[$index]) ? $id_mapel[$index] : null;
+            $jawab = isset($jawaban[$soal_id]) ? $jawaban[$soal_id] : '';
+
+            $data = array(
+                'id_siswa_jawab' => $user . '_' . uniqid(),
+                'id_mapel' => $mapel,
+                'username' => $user,
+                'soal_id' => $soal_id,
+                'jawaban' => $jawab
+            );
+
+            $this->db->insert('siswa_jawab', $data);
+        }
+
+        $username = $this->session->userdata('username');
+
+        if ($username) {
+            $this->Session_Model->delete_user_sessions($username);
+        }
+
+        $this->input->set_cookie(array(
+            'name'     => 'app_session_id',
+            'value'    => '',
+            'expire'   => 0,
+            'path'     => '/',
+            'httponly' => TRUE,
+            'secure'   => FALSE,
+        ));
+
+        $this->session->sess_destroy();
+        redirect('/');
+    }
 
     public function logout()
     {
