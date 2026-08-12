@@ -33,17 +33,19 @@
 
     .detail-ujian-page .btn-ujian {
         min-width: 180px;
-        background: linear-gradient(135deg, #ff6b6b, #ff3d71);
+        background: linear-gradient(135deg, #d32f2f, #b71c1c);
         border: none;
         color: #fff;
-        box-shadow: 0 0.8rem 1.8rem rgba(255, 88, 135, 0.25);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        letter-spacing: 0.08em;
+        box-shadow: 0 0.8rem 1.8rem rgba(211, 47, 47, 0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     }
 
     .detail-ujian-page .btn-ujian:hover {
-        background: linear-gradient(135deg, #ff4b4b, #ff1d52);
+        background: linear-gradient(135deg, #c62828, #8e2424);
         transform: translateY(-1px);
-        box-shadow: 0 1rem 2rem rgba(255, 88, 135, 0.3);
+        box-shadow: 0 1rem 2rem rgba(211, 47, 47, 0.35);
+        filter: brightness(1.05);
     }
 
     @media (max-width: 768px) {
@@ -99,7 +101,13 @@
                         <h5 class="text-uppercase font-weight-bolder"><?= $detail_ujian['tanggal_mulai'] ?></h5>
                         <h5 class="text-uppercase font-weight-bolder"><?= $detail_ujian['waktu_mulai'] ?> - <?= $detail_ujian['waktu_selesai'] ?></h5>
                         <h5 class="text-uppercase font-weight-bolder"><?= $detail_ujian['selisih_menit'] ?> menit</h5>
-                        <a class="btn btn-ujian btn-lg mt-3 text-uppercase font-weight-bolder" href="<?= base_url() ?>Dashboard/soal_ujian_username/<?= $detail_ujian['id_jadwal'] ?>">Mulai Ujian</a>
+                        <!-- <a class="btn btn-ujian btn-lg mt-3 text-uppercase font-weight-bolder" href="<?= base_url() ?>Dashboard/soal_ujian_username/<?= $detail_ujian['id_jadwal'] ?>">Mulai Ujian</a> -->
+
+                        <form method="post" action="<?= base_url() ?>Dashboard/simpan_status_peserta">
+                            <input type="text" value="<?= $detail_ujian['id_jadwal'] ?>" name="id_jadwal" class="form-control" hidden>
+                            <input type="text" value="<?= $siswa['username'] ?>" name="username" class="form-control" hidden>
+                            <button type="submit" class="btn btn-ujian btn-lg mt-3 text-uppercase font-weight-bolder">Mulai</button>
+                        </form>
                     </div>
                 </div>
             </div>

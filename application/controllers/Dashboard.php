@@ -31,6 +31,26 @@ class Dashboard extends CI_Controller
         $this->load->view('templates/footer');
     }
 
+    public function simpan_status_peserta()
+    {
+
+        $this->Model_keamanan->getKeamanan();
+        $sess = $this->session->userdata('username');
+
+        $id_jadwal = $this->input->post('id_jadwal');
+        $username = $this->input->post('username');
+        $status = "MENGERJAKAN";
+
+        $data = array(
+            'id_jadwal' => $id_jadwal,
+            'username' => $username,
+            'status' => $status
+        );
+
+        $this->db->insert('siswa_status', $data);
+        redirect('Dashboard/soal_ujian_username/' . $id_jadwal);
+    }
+
     public function soal_ujian_username($id_jadwal)
     {
         $this->Model_keamanan->getKeamanan();

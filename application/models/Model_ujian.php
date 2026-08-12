@@ -41,7 +41,7 @@ WHERE a_jadwal.id_jadwal='$id_jadwal' AND a_siswa.username='$sess'";
 
     public function soal_ujian_siswa($id_jadwal, $sess)
     {
-        $sql = "SELECT a_jadwal.id_jadwal,a_jadwal.id_mapel,jadwal_soal.id_bank_soal,soal.id_soal,a_siswa.username,a_kelas.kelas,a_siswa.nama_siswa,a_mapel.nama_mapel,
+        $sql = "SELECT a_jadwal.id_jadwal,a_jadwal.id_mapel,jadwal_soal.id_bank_soal,soal.id_soal,a_siswa.username,a_kelas.kelas,a_siswa.nama_siswa,a_mapel.nama_mapel,a_jadwal.tanggal_mulai,a_jadwal.waktu_mulai,a_jadwal.waktu_selesai,
 TIMESTAMPDIFF(
     MINUTE,
     a_jadwal.waktu_mulai,

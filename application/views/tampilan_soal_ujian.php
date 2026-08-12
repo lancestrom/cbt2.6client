@@ -20,6 +20,8 @@
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
                         <div>
                             <h4 class="text-uppercase font-weight-bolder mb-1">Soal</h4>
+                            <p class="text-muted mb-1 small">Sisa waktu</p>
+                            <h5 class="text-uppercase font-weight-bolder mb-0"><span id="countdownTimer"><?= $siswa['selisih_menit'] ?>:00</span></h5>
                             <p class="text-muted mb-0" id="questionCounter">Soal 1 dari <?= $totalSoal ?></p>
                         </div>
                         <div class="d-flex flex-wrap gap-2 mt-3 mt-md-0" id="questionDots"></div>
@@ -232,11 +234,106 @@
         const nextBtn = document.getElementById('nextBtn');
         const counter = document.getElementById('questionCounter');
         const dotsWrap = document.getElementById('questionDots');
+        const countdownEl = document.getElementById('countdownTimer');
+        const quizForm = document.getElementById('quizForm');
+        const storageKey = 'tampilanSoalUjianState';
         let activeIndex = 0;
+
+        const endTime = new Date("<?= $siswa['tanggal_mulai'] ?>T<?= $siswa['waktu_selesai'] ?>");
+        const serverNow = new Date("<?= date('Y-m-d\TH:i:s') ?>");
+        let currentTime = serverNow;
+        let countdownInterval;
+        let formSubmitted = false;
+
+        function getSavedState() {
+            const saved = localStorage.getItem(storageKey);
+            if (!saved) {
+                return null;
+            }
+            try {
+                return JSON.parse(saved);
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function saveState() {
+            const answers = {};
+            document.querySelectorAll('input[type="radio"][name^="jawaban"]').forEach(function(input) {
+                if (input.checked) {
+                    answers[input.name] = input.value;
+                }
+            });
+            const state = {
+                activeIndex: activeIndex,
+                answers: answers,
+                savedAt: new Date().toISOString()
+            };
+            localStorage.setItem(storageKey, JSON.stringify(state));
+        }
+
+        function restoreState() {
+            const state = getSavedState();
+            if (!state) {
+                return;
+            }
+
+            if (typeof state.activeIndex === 'number' && state.activeIndex >= 0 && state.activeIndex < total) {
+                activeIndex = state.activeIndex;
+            }
+
+            if (state.answers) {
+                Object.entries(state.answers).forEach(function([name, value]) {
+                    const input = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+                    if (input) {
+                        input.checked = true;
+                    }
+                });
+            }
+        }
+
+        function clearState() {
+            localStorage.removeItem(storageKey);
+        }
+
+        quizForm.addEventListener('submit', function() {
+            formSubmitted = true;
+            clearState();
+        });
+
+        quizForm.addEventListener('change', function(event) {
+            if (event.target.matches('input[type="radio"][name^="jawaban"]')) {
+                saveState();
+            }
+        });
+
+        function formatDuration(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return minutes + ':' + secs.toString().padStart(2, '0');
+        }
+
+        function updateCountdown() {
+            const diffSeconds = Math.max(0, Math.floor((endTime - currentTime) / 1000));
+            countdownEl.textContent = formatDuration(diffSeconds);
+
+            if (diffSeconds <= 0) {
+                clearInterval(countdownInterval);
+                if (!formSubmitted) {
+                    quizForm.submit();
+                }
+            }
+        }
+
+        updateCountdown();
+        countdownInterval = setInterval(function() {
+            currentTime = new Date(currentTime.getTime() + 1000);
+            updateCountdown();
+        }, 1000);
 
         slides.forEach(function(slide, index) {
             const dot = document.createElement('span');
-            dot.className = 'question-dot' + (index === 0 ? ' active' : '');
+            dot.className = 'question-dot';
             dot.setAttribute('data-index', index);
             dot.addEventListener('click', function() {
                 activeIndex = index;
@@ -244,6 +341,9 @@
             });
             dotsWrap.appendChild(dot);
         });
+
+        restoreState();
+        updateSlide();
 
         function updateSlide() {
             slides.forEach(function(slide, index) {
@@ -255,6 +355,7 @@
             counter.textContent = 'Soal ' + (activeIndex + 1) + ' dari ' + total;
             prevBtn.disabled = activeIndex === 0;
             nextBtn.disabled = activeIndex === total - 1;
+            saveState();
         }
 
         prevBtn.addEventListener('click', function() {
@@ -266,8 +367,24 @@
 
         nextBtn.addEventListener('click', function() {
             if (activeIndex < total - 1) {
-                activeIndex += 1;
-                updateSlide();
+                nextBtn.disabled = true;
+                let remainingTime = 10;
+                const originalText = nextBtn.textContent;
+
+                nextBtn.textContent = 'Tunggu ' + remainingTime + 's';
+
+                const countdownInterval = setInterval(function() {
+                    remainingTime--;
+                    nextBtn.textContent = 'Tunggu ' + remainingTime + 's';
+
+                    if (remainingTime <= 0) {
+                        clearInterval(countdownInterval);
+                        activeIndex += 1;
+                        updateSlide();
+                        nextBtn.textContent = originalText;
+                        nextBtn.disabled = activeIndex === total - 1;
+                    }
+                }, 1000);
             }
         });
     });
