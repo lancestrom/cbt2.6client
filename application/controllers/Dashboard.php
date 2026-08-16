@@ -108,6 +108,13 @@ class Dashboard extends CI_Controller
             'secure'   => FALSE,
         ));
 
+        $dataX = array(
+            'status' => 'SELESAI'
+        );
+
+        $this->db->where('username', $username);
+        $this->db->update('siswa_status', $dataX);
+
         $this->session->sess_destroy();
         redirect('/');
     }

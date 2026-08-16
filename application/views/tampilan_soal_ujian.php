@@ -67,7 +67,7 @@
                             <button type="button" class="btn btn-primary flex-fill" id="nextBtn">Selanjutnya</button>
                         </div>
                         <div class="text-center mt-3">
-                            <button type="submit" class="btn btn-success btn-lg w-100">Kirim Jawaban</button>
+                            <button type="submit" class="btn btn-success btn-lg w-100" id="submitBtn" disabled>Kirim Jawaban</button>
                         </div>
                     </form>
                 </div>
@@ -232,17 +232,20 @@
         const total = slides.length;
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
         const counter = document.getElementById('questionCounter');
         const dotsWrap = document.getElementById('questionDots');
         const countdownEl = document.getElementById('countdownTimer');
         const quizForm = document.getElementById('quizForm');
         const storageKey = 'tampilanSoalUjianState';
+        const timerKey = 'tampilanSoalUjianTimer';
         let activeIndex = 0;
 
         const endTime = new Date("<?= $siswa['tanggal_mulai'] ?>T<?= $siswa['waktu_selesai'] ?>");
         const serverNow = new Date("<?= date('Y-m-d\TH:i:s') ?>");
         let currentTime = serverNow;
         let countdownInterval;
+        let nextBtnCountdownInterval;
         let formSubmitted = false;
 
         function getSavedState() {
@@ -255,6 +258,45 @@
             } catch (error) {
                 return null;
             }
+        }
+
+        function getSavedTimerState() {
+            const saved = localStorage.getItem(timerKey);
+            if (!saved) {
+                return null;
+            }
+            try {
+                return JSON.parse(saved);
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function saveTimerState(questionIndex, expiresAt) {
+            const timerState = {
+                questionIndex: questionIndex,
+                expiresAt: expiresAt
+            };
+            localStorage.setItem(timerKey, JSON.stringify(timerState));
+        }
+
+        function clearTimerState() {
+            localStorage.removeItem(timerKey);
+        }
+
+        function stopNextDelay() {
+            if (nextBtnCountdownInterval) {
+                clearInterval(nextBtnCountdownInterval);
+                nextBtnCountdownInterval = null;
+            }
+        }
+
+        function getRemainingTimerSeconds(expiresAt) {
+            if (!expiresAt) {
+                return 0;
+            }
+            const diffMs = new Date(expiresAt).getTime() - Date.now();
+            return Math.max(0, Math.ceil(diffMs / 1000));
         }
 
         function saveState() {
@@ -292,13 +334,52 @@
             }
         }
 
+        function restoreTimerState() {
+            const timerState = getSavedTimerState();
+            if (!timerState || !timerState.expiresAt) {
+                return;
+            }
+
+            const remainingTime = getRemainingTimerSeconds(timerState.expiresAt);
+            const questionIndex = Number(timerState.questionIndex || 0);
+
+            if (remainingTime <= 0) {
+                clearTimerState();
+                if (questionIndex < total - 1) {
+                    activeIndex = questionIndex + 1;
+                }
+                updateSlide();
+                return;
+            }
+
+            nextBtn.disabled = true;
+            nextBtn.textContent = 'Tunggu ' + remainingTime + 's';
+
+            stopNextDelay();
+            nextBtnCountdownInterval = setInterval(function() {
+                const remaining = getRemainingTimerSeconds(timerState.expiresAt);
+                nextBtn.textContent = 'Tunggu ' + remaining + 's';
+
+                if (remaining <= 0) {
+                    stopNextDelay();
+                    clearTimerState();
+                    if (questionIndex < total - 1) {
+                        activeIndex = questionIndex + 1;
+                    }
+                    updateSlide();
+                }
+            }, 1000);
+        }
+
         function clearState() {
             localStorage.removeItem(storageKey);
+            clearTimerState();
         }
 
         quizForm.addEventListener('submit', function() {
             formSubmitted = true;
             clearState();
+            stopNextDelay();
         });
 
         quizForm.addEventListener('change', function(event) {
@@ -343,6 +424,7 @@
         });
 
         restoreState();
+        restoreTimerState();
         updateSlide();
 
         function updateSlide() {
@@ -355,11 +437,15 @@
             counter.textContent = 'Soal ' + (activeIndex + 1) + ' dari ' + total;
             prevBtn.disabled = activeIndex === 0;
             nextBtn.disabled = activeIndex === total - 1;
+            nextBtn.textContent = 'Selanjutnya';
+            submitBtn.disabled = activeIndex !== total - 1;
             saveState();
         }
 
         prevBtn.addEventListener('click', function() {
             if (activeIndex > 0) {
+                stopNextDelay();
+                clearTimerState();
                 activeIndex -= 1;
                 updateSlide();
             }
@@ -367,24 +453,26 @@
 
         nextBtn.addEventListener('click', function() {
             if (activeIndex < total - 1) {
+                stopNextDelay();
                 nextBtn.disabled = true;
-                let remainingTime = 10;
-                const originalText = nextBtn.textContent;
+                const expiresAt = new Date(Date.now() + 60000).toISOString();
 
-                nextBtn.textContent = 'Tunggu ' + remainingTime + 's';
+                saveTimerState(activeIndex, expiresAt);
 
-                const countdownInterval = setInterval(function() {
-                    remainingTime--;
+                const doCountdownTick = function() {
+                    const remainingTime = getRemainingTimerSeconds(expiresAt);
                     nextBtn.textContent = 'Tunggu ' + remainingTime + 's';
 
                     if (remainingTime <= 0) {
-                        clearInterval(countdownInterval);
+                        stopNextDelay();
+                        clearTimerState();
                         activeIndex += 1;
                         updateSlide();
-                        nextBtn.textContent = originalText;
-                        nextBtn.disabled = activeIndex === total - 1;
                     }
-                }, 1000);
+                };
+
+                doCountdownTick();
+                nextBtnCountdownInterval = setInterval(doCountdownTick, 1000);
             }
         });
     });
