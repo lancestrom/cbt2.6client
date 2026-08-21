@@ -37,7 +37,7 @@
                                 </div>
                                 <?php if (!empty($s['gambar'])): ?>
                                     <div class="mb-4 text-center">
-                                        <img src="<?= base_url('uploads/soal/' . $s['gambar']) ?>" class="img-fluid rounded shadow-sm" alt="Gambar soal">
+                                        <img src="<?= base_url('assets/images/gambar/' . $s['gambar']) ?>" class="img-fluid rounded shadow-sm" alt="Gambar soal">
                                     </div>
                                 <?php endif; ?>
 
@@ -224,256 +224,98 @@
             border-radius: 0;
         }
     }
+
+    #countdownTimer {
+        font-size: 1.5rem;
+        font-weight: 700;
+        transition: color 0.3s ease;
+    }
+
+    #countdownTimer.warning {
+        color: #ff6b6b;
+        animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
+    }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const slides = Array.from(document.querySelectorAll('.question-slide'));
-        const total = slides.length;
+        const countdownTimer = document.getElementById('countdownTimer');
+        const quizForm = document.getElementById('quizForm');
+        const questionSlides = Array.from(document.querySelectorAll('.question-slide'));
+        const questionCounter = document.getElementById('questionCounter');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const submitBtn = document.getElementById('submitBtn');
-        const counter = document.getElementById('questionCounter');
-        const dotsWrap = document.getElementById('questionDots');
-        const countdownEl = document.getElementById('countdownTimer');
-        const quizForm = document.getElementById('quizForm');
-        const storageKey = 'tampilanSoalUjianState';
-        const timerKey = 'tampilanSoalUjianTimer';
-        let activeIndex = 0;
+        let currentQuestion = 0;
+        const durationInSeconds = <?= (int) $siswa['selisih_menit'] * 60 ?>;
+        const timerKey = <?= json_encode('ujian_end_time_' . $siswa['id_jadwal'] . '_' . $siswa['username']) ?>;
+        let endTime = parseInt(localStorage.getItem(timerKey), 10);
 
-        const endTime = new Date("<?= $siswa['tanggal_mulai'] ?>T<?= $siswa['waktu_selesai'] ?>");
-        const serverNow = new Date("<?= date('Y-m-d\TH:i:s') ?>");
-        let currentTime = serverNow;
-        let countdownInterval;
-        let nextBtnCountdownInterval;
-        let formSubmitted = false;
-
-        function getSavedState() {
-            const saved = localStorage.getItem(storageKey);
-            if (!saved) {
-                return null;
-            }
-            try {
-                return JSON.parse(saved);
-            } catch (error) {
-                return null;
-            }
+        if (!Number.isFinite(endTime) || endTime <= 0) {
+            endTime = Date.now() + (durationInSeconds * 1000);
+            localStorage.setItem(timerKey, endTime);
         }
 
-        function getSavedTimerState() {
-            const saved = localStorage.getItem(timerKey);
-            if (!saved) {
-                return null;
-            }
-            try {
-                return JSON.parse(saved);
-            } catch (error) {
-                return null;
-            }
-        }
-
-        function saveTimerState(questionIndex, expiresAt) {
-            const timerState = {
-                questionIndex: questionIndex,
-                expiresAt: expiresAt
-            };
-            localStorage.setItem(timerKey, JSON.stringify(timerState));
-        }
-
-        function clearTimerState() {
-            localStorage.removeItem(timerKey);
-        }
-
-        function stopNextDelay() {
-            if (nextBtnCountdownInterval) {
-                clearInterval(nextBtnCountdownInterval);
-                nextBtnCountdownInterval = null;
-            }
-        }
-
-        function getRemainingTimerSeconds(expiresAt) {
-            if (!expiresAt) {
-                return 0;
-            }
-            const diffMs = new Date(expiresAt).getTime() - Date.now();
-            return Math.max(0, Math.ceil(diffMs / 1000));
-        }
-
-        function saveState() {
-            const answers = {};
-            document.querySelectorAll('input[type="radio"][name^="jawaban"]').forEach(function(input) {
-                if (input.checked) {
-                    answers[input.name] = input.value;
-                }
-            });
-            const state = {
-                activeIndex: activeIndex,
-                answers: answers,
-                savedAt: new Date().toISOString()
-            };
-            localStorage.setItem(storageKey, JSON.stringify(state));
-        }
-
-        function restoreState() {
-            const state = getSavedState();
-            if (!state) {
-                return;
-            }
-
-            if (typeof state.activeIndex === 'number' && state.activeIndex >= 0 && state.activeIndex < total) {
-                activeIndex = state.activeIndex;
-            }
-
-            if (state.answers) {
-                Object.entries(state.answers).forEach(function([name, value]) {
-                    const input = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
-                    if (input) {
-                        input.checked = true;
-                    }
-                });
-            }
-        }
-
-        function restoreTimerState() {
-            const timerState = getSavedTimerState();
-            if (!timerState || !timerState.expiresAt) {
-                return;
-            }
-
-            const remainingTime = getRemainingTimerSeconds(timerState.expiresAt);
-            const questionIndex = Number(timerState.questionIndex || 0);
-
-            if (remainingTime <= 0) {
-                clearTimerState();
-                if (questionIndex < total - 1) {
-                    activeIndex = questionIndex + 1;
-                }
-                updateSlide();
-                return;
-            }
-
-            nextBtn.disabled = true;
-            nextBtn.textContent = 'Tunggu ' + remainingTime + 's';
-
-            stopNextDelay();
-            nextBtnCountdownInterval = setInterval(function() {
-                const remaining = getRemainingTimerSeconds(timerState.expiresAt);
-                nextBtn.textContent = 'Tunggu ' + remaining + 's';
-
-                if (remaining <= 0) {
-                    stopNextDelay();
-                    clearTimerState();
-                    if (questionIndex < total - 1) {
-                        activeIndex = questionIndex + 1;
-                    }
-                    updateSlide();
-                }
-            }, 1000);
-        }
-
-        function clearState() {
-            localStorage.removeItem(storageKey);
-            clearTimerState();
-        }
-
-        quizForm.addEventListener('submit', function() {
-            formSubmitted = true;
-            clearState();
-            stopNextDelay();
-        });
-
-        quizForm.addEventListener('change', function(event) {
-            if (event.target.matches('input[type="radio"][name^="jawaban"]')) {
-                saveState();
-            }
-        });
-
-        function formatDuration(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return minutes + ':' + secs.toString().padStart(2, '0');
-        }
+        let countdownInterval = null;
 
         function updateCountdown() {
-            const diffSeconds = Math.max(0, Math.floor((endTime - currentTime) / 1000));
-            countdownEl.textContent = formatDuration(diffSeconds);
+            const remainingSeconds = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
 
-            if (diffSeconds <= 0) {
+            countdownTimer.textContent = minutes + ':' + String(seconds).padStart(2, '0');
+            countdownTimer.classList.toggle('warning', remainingSeconds <= 60 && remainingSeconds > 0);
+
+            if (remainingSeconds === 0) {
                 clearInterval(countdownInterval);
-                if (!formSubmitted) {
-                    quizForm.submit();
-                }
+                countdownTimer.classList.add('warning');
             }
         }
 
         updateCountdown();
-        countdownInterval = setInterval(function() {
-            currentTime = new Date(currentTime.getTime() + 1000);
-            updateCountdown();
-        }, 1000);
+        countdownInterval = setInterval(updateCountdown, 1000);
 
-        slides.forEach(function(slide, index) {
-            const dot = document.createElement('span');
-            dot.className = 'question-dot';
-            dot.setAttribute('data-index', index);
-            dot.addEventListener('click', function() {
-                activeIndex = index;
-                updateSlide();
-            });
-            dotsWrap.appendChild(dot);
-        });
+        function showQuestion(index) {
+            currentQuestion = index;
 
-        restoreState();
-        restoreTimerState();
-        updateSlide();
+            questionSlides.forEach(function(slide, slideIndex) {
+                slide.classList.toggle('active', slideIndex === currentQuestion);
+            });
 
-        function updateSlide() {
-            slides.forEach(function(slide, index) {
-                slide.classList.toggle('active', index === activeIndex);
-            });
-            document.querySelectorAll('.question-dot').forEach(function(dot, index) {
-                dot.classList.toggle('active', index === activeIndex);
-            });
-            counter.textContent = 'Soal ' + (activeIndex + 1) + ' dari ' + total;
-            prevBtn.disabled = activeIndex === 0;
-            nextBtn.disabled = activeIndex === total - 1;
-            nextBtn.textContent = 'Selanjutnya';
-            submitBtn.disabled = activeIndex !== total - 1;
-            saveState();
+            questionCounter.textContent = 'Soal ' + (currentQuestion + 1) + ' dari ' + questionSlides.length;
+            prevBtn.disabled = currentQuestion === 0;
+            nextBtn.classList.toggle('d-none', currentQuestion === questionSlides.length - 1);
+            submitBtn.disabled = currentQuestion !== questionSlides.length - 1;
         }
 
         prevBtn.addEventListener('click', function() {
-            if (activeIndex > 0) {
-                stopNextDelay();
-                clearTimerState();
-                activeIndex -= 1;
-                updateSlide();
+            if (currentQuestion > 0) {
+                showQuestion(currentQuestion - 1);
             }
         });
 
         nextBtn.addEventListener('click', function() {
-            if (activeIndex < total - 1) {
-                stopNextDelay();
-                nextBtn.disabled = true;
-                const expiresAt = new Date(Date.now() + 60000).toISOString();
-
-                saveTimerState(activeIndex, expiresAt);
-
-                const doCountdownTick = function() {
-                    const remainingTime = getRemainingTimerSeconds(expiresAt);
-                    nextBtn.textContent = 'Tunggu ' + remainingTime + 's';
-
-                    if (remainingTime <= 0) {
-                        stopNextDelay();
-                        clearTimerState();
-                        activeIndex += 1;
-                        updateSlide();
-                    }
-                };
-
-                doCountdownTick();
-                nextBtnCountdownInterval = setInterval(doCountdownTick, 1000);
+            if (currentQuestion < questionSlides.length - 1) {
+                showQuestion(currentQuestion + 1);
             }
+        });
+
+        showQuestion(0);
+
+        quizForm.addEventListener('submit', function() {
+            localStorage.removeItem(timerKey);
         });
     });
 </script>
