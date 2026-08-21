@@ -1,4 +1,14 @@
-<?php $totalSoal = count($soal); ?>
+<?php
+$totalSoal = count($soal);
+$waktuMulai = new DateTime($siswa['waktu_mulai']);
+$waktuSelesai = new DateTime($siswa['waktu_selesai']);
+
+if ($waktuSelesai < $waktuMulai) {
+    $waktuSelesai->modify('+1 day');
+}
+
+$selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
+?>
 <div class="container py-4">
     <div class="row">
         <div class="col-12">
@@ -21,7 +31,7 @@
                         <div>
                             <h4 class="text-uppercase font-weight-bolder mb-1">Soal</h4>
                             <p class="text-muted mb-1 small">Sisa waktu</p>
-                            <h5 class="text-uppercase font-weight-bolder mb-0"><span id="countdownTimer"><?= $siswa['selisih_menit'] ?>:00</span></h5>
+                            <h5 class="text-uppercase font-weight-bolder mb-0"><span id="countdownTimer"><?= $selisihWaktu ?></span></h5>
                             <p class="text-muted mb-0" id="questionCounter">Soal 1 dari <?= $totalSoal ?></p>
                         </div>
                         <div class="d-flex flex-wrap gap-2 mt-3 mt-md-0" id="questionDots"></div>
