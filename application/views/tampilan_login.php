@@ -105,21 +105,21 @@
         var serverTimeStr = "<?php echo date('Y-m-d H:i:s'); ?>";
         var serverTime = new Date(serverTimeStr.replace(/-/g, '/'));
 
-        // Memperbarui jam setiap detik
-        setInterval(function() {
-            // Tambah 1 detik
-            serverTime.setSeconds(serverTime.getSeconds() + 1);
-
+        function updateServerTime() {
             // Format tanggal dan waktu
-            var day = pad(serverTime.getDate());
-            var month = pad(serverTime.getMonth() + 1);
-            var year = serverTime.getFullYear();
             var hours = pad(serverTime.getHours());
             var minutes = pad(serverTime.getMinutes());
             var seconds = pad(serverTime.getSeconds());
 
             // Tampilkan waktu yang sudah diformat
             timeDisplay.innerText = hours + ':' + minutes + ':' + seconds;
+        }
+
+        // Tampilkan segera saat halaman dimuat, lalu perbarui setiap detik
+        updateServerTime();
+        setInterval(function() {
+            serverTime.setSeconds(serverTime.getSeconds() + 1);
+            updateServerTime();
         }, 1000);
     </script>
 </body>
