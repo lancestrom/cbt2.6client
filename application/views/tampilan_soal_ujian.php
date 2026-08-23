@@ -281,7 +281,7 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
         var clientNow = Date.now();
         var serverOffset = serverNow - clientNow;
         var examKey = 'cbt_exam_' + <?= json_encode((string) $siswa['id_jadwal'] . '_' . (string) $siswa['username']) ?>;
-        var delayDuration = 10 * 1000;
+        var delayDuration = 60 * 1000;
         var currentIndex = parseInt(localStorage.getItem(examKey + '_question'), 10);
         var countdownInterval;
 
@@ -426,7 +426,7 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
                 })
                 .join(':');
 
-            if (remaining <= 60 * 60 * 1000) {
+            if (remaining <= 10 * 60 * 1000) {
                 countdownTimer.classList.add('warning');
                 showQuestion(slides.length - 1);
             }
