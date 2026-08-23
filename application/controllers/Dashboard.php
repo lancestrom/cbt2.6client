@@ -76,7 +76,7 @@ class Dashboard extends CI_Controller
             redirect('dashboard');
             return;
         }
-
+ 
         foreach ($id_soal as $index => $soal_id) {
             $user = isset($usernames[$index]) ? $usernames[$index] : $this->session->userdata('username');
             $mapel = isset($id_mapel[$index]) ? $id_mapel[$index] : null;

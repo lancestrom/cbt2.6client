@@ -30,8 +30,7 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
                         <div>
                             <h4 class="text-uppercase font-weight-bolder mb-1">Soal</h4>
-                            <p class="text-muted mb-1 small">Sisa waktu</p>
-                            <h5 class="text-uppercase font-weight-bolder mb-0"><span id="countdownTimer"><?= $selisihWaktu ?></span></h5>
+                            <h5 class="text-uppercase font-weight-bolder mb-0" id="countdownTimer"><?= $siswa['selisih_menit'] ?>:00</h5>
                             <p class="text-muted mb-0" id="questionCounter">Soal 1 dari <?= $totalSoal ?></p>
                         </div>
                         <div class="d-flex flex-wrap gap-2 mt-3 mt-md-0" id="questionDots"></div>
@@ -117,6 +116,11 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
     .choice-card .form-check-input:checked {
         border-color: #4e73df;
         background-color: #4e73df;
+    }
+
+    .question-slide img {
+        max-width: 100%;
+        height: auto;
     }
 
     #questionDots {
@@ -230,6 +234,10 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
             font-size: .95rem;
         }
 
+        .question-slide img {
+            max-width: 70%;
+        }
+
         .card-header {
             border-radius: 0;
         }
@@ -260,72 +268,181 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const countdownTimer = document.getElementById('countdownTimer');
-        const quizForm = document.getElementById('quizForm');
-        const questionSlides = Array.from(document.querySelectorAll('.question-slide'));
-        const questionCounter = document.getElementById('questionCounter');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        let currentQuestion = 0;
-        const durationInSeconds = <?= (int) $siswa['selisih_menit'] * 60 ?>;
-        const timerKey = <?= json_encode('ujian_end_time_' . $siswa['id_jadwal'] . '_' . $siswa['username']) ?>;
-        let endTime = parseInt(localStorage.getItem(timerKey), 10);
+    (function() {
+        var countdownTimer = document.getElementById('countdownTimer');
+        var quizForm = document.getElementById('quizForm');
+        var slides = Array.prototype.slice.call(document.querySelectorAll('.question-slide'));
+        var nextBtn = document.getElementById('nextBtn');
+        var prevBtn = document.getElementById('prevBtn');
+        var submitBtn = document.getElementById('submitBtn');
+        var questionCounter = document.getElementById('questionCounter');
+        var questionDots = document.getElementById('questionDots');
+        var serverNow = <?= time() ?> * 1000;
+        var clientNow = Date.now();
+        var serverOffset = serverNow - clientNow;
+        var examKey = 'cbt_exam_' + <?= json_encode((string) $siswa['id_jadwal'] . '_' . (string) $siswa['username']) ?>;
+        var delayDuration = 10 * 1000;
+        var currentIndex = parseInt(localStorage.getItem(examKey + '_question'), 10);
+        var countdownInterval;
 
-        if (!Number.isFinite(endTime) || endTime <= 0) {
-            endTime = Date.now() + (durationInSeconds * 1000);
-            localStorage.setItem(timerKey, endTime);
+        if (isNaN(currentIndex) || currentIndex < 0 || currentIndex >= slides.length) {
+            currentIndex = 0;
         }
 
-        let countdownInterval = null;
+        var examDate = <?= json_encode($siswa['tanggal_mulai']) ?>;
+        var examStart = <?= json_encode($siswa['waktu_mulai']) ?>.split(':');
+        var examEnd = <?= json_encode($siswa['waktu_selesai']) ?>.split(':');
+        var dateParts = examDate.split('-');
+        var startTime = Date.UTC(
+            parseInt(dateParts[0], 10),
+            parseInt(dateParts[1], 10) - 1,
+            parseInt(dateParts[2], 10),
+            parseInt(examStart[0], 10) - 7,
+            parseInt(examStart[1], 10),
+            parseInt(examStart[2] || 0, 10)
+        );
+        var endTime = Date.UTC(
+            parseInt(dateParts[0], 10),
+            parseInt(dateParts[1], 10) - 1,
+            parseInt(dateParts[2], 10),
+            parseInt(examEnd[0], 10) - 7,
+            parseInt(examEnd[1], 10),
+            parseInt(examEnd[2] || 0, 10)
+        );
 
-        function updateCountdown() {
-            const remainingSeconds = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
-            const minutes = Math.floor(remainingSeconds / 60);
-            const seconds = remainingSeconds % 60;
+        if (endTime <= startTime) {
+            endTime += 24 * 60 * 60 * 1000;
+        }
 
-            countdownTimer.textContent = minutes + ':' + String(seconds).padStart(2, '0');
-            countdownTimer.classList.toggle('warning', remainingSeconds <= 60 && remainingSeconds > 0);
+        function serverTime() {
+            return Date.now() + serverOffset;
+        }
 
-            if (remainingSeconds === 0) {
-                clearInterval(countdownInterval);
-                countdownTimer.classList.add('warning');
+        function createQuestionDots() {
+            slides.forEach(function(slide, index) {
+                var dot = document.createElement('button');
+                dot.type = 'button';
+                dot.className = 'question-dot';
+                dot.title = 'Soal ' + (index + 1);
+                dot.setAttribute('aria-label', 'Buka soal ' + (index + 1));
+                dot.addEventListener('click', function() {
+                    showQuestion(index);
+                });
+                questionDots.appendChild(dot);
+            });
+        }
+
+        function getDelayEnd(index) {
+            var key = examKey + '_delay_' + index;
+            var delayEnd = parseInt(localStorage.getItem(key), 10);
+
+            if (isNaN(delayEnd)) {
+                delayEnd = serverTime() + delayDuration;
+                localStorage.setItem(key, String(delayEnd));
             }
+
+            return delayEnd;
         }
 
-        updateCountdown();
-        countdownInterval = setInterval(updateCountdown, 1000);
+        function updateNavigation() {
+            var delayRemaining = Math.max(0, getDelayEnd(currentIndex) - serverTime());
+            var isLastQuestion = currentIndex === slides.length - 1;
 
-        function showQuestion(index) {
-            currentQuestion = index;
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = delayRemaining > 0 || isLastQuestion;
+            submitBtn.disabled = !isLastQuestion;
+            questionCounter.textContent = 'Soal ' + (currentIndex + 1) + ' dari ' + slides.length;
 
-            questionSlides.forEach(function(slide, slideIndex) {
-                slide.classList.toggle('active', slideIndex === currentQuestion);
+            Array.prototype.forEach.call(questionDots.children, function(dot, index) {
+                dot.classList.toggle('active', index === currentIndex);
             });
 
-            questionCounter.textContent = 'Soal ' + (currentQuestion + 1) + ' dari ' + questionSlides.length;
-            prevBtn.disabled = currentQuestion === 0;
-            nextBtn.classList.toggle('d-none', currentQuestion === questionSlides.length - 1);
-            submitBtn.disabled = currentQuestion !== questionSlides.length - 1;
+            if (delayRemaining > 0) {
+                nextBtn.textContent = 'Tunggu ' + Math.ceil(delayRemaining / 1000) + ' detik';
+            } else {
+                nextBtn.textContent = 'Selanjutnya';
+            }
         }
 
-        prevBtn.addEventListener('click', function() {
-            if (currentQuestion > 0) {
-                showQuestion(currentQuestion - 1);
+        function showQuestion(index) {
+            if (index < 0 || index >= slides.length) {
+                return;
             }
+
+            currentIndex = index;
+            slides.forEach(function(slide, slideIndex) {
+                slide.classList.toggle('active', slideIndex === currentIndex);
+            });
+            localStorage.setItem(examKey + '_question', String(currentIndex));
+            getDelayEnd(currentIndex);
+            updateNavigation();
+        }
+
+        function restoreAnswers() {
+            Array.prototype.forEach.call(quizForm.querySelectorAll('input[type="radio"]'), function(input) {
+                var answerKey = examKey + '_answer_' + input.name;
+                if (localStorage.getItem(answerKey) === input.value) {
+                    input.checked = true;
+                }
+            });
+        }
+
+        quizForm.addEventListener('change', function(event) {
+            if (event.target.matches('input[type="radio"]')) {
+                localStorage.setItem(examKey + '_answer_' + event.target.name, event.target.value);
+            }
+        });
+
+        quizForm.addEventListener('submit', function() {
+            Object.keys(localStorage).forEach(function(key) {
+                if (key.indexOf(examKey + '_') === 0) {
+                    localStorage.removeItem(key);
+                }
+            });
         });
 
         nextBtn.addEventListener('click', function() {
-            if (currentQuestion < questionSlides.length - 1) {
-                showQuestion(currentQuestion + 1);
+            if (!nextBtn.disabled) {
+                showQuestion(currentIndex + 1);
             }
         });
 
-        showQuestion(0);
-
-        quizForm.addEventListener('submit', function() {
-            localStorage.removeItem(timerKey);
+        prevBtn.addEventListener('click', function() {
+            if (!prevBtn.disabled) {
+                showQuestion(currentIndex - 1);
+            }
         });
-    });
+
+        function updateCountdown() {
+            var remaining = Math.max(0, endTime - serverTime());
+            var totalSeconds = Math.floor(remaining / 1000);
+            var hours = Math.floor(totalSeconds / 3600);
+            var minutes = Math.floor((totalSeconds % 3600) / 60);
+            var seconds = totalSeconds % 60;
+
+            countdownTimer.textContent = [hours, minutes, seconds]
+                .map(function(value) {
+                    return String(value).padStart(2, '0');
+                })
+                .join(':');
+
+            if (remaining <= 60 * 60 * 1000) {
+                countdownTimer.classList.add('warning');
+                showQuestion(slides.length - 1);
+            }
+
+            if (remaining === 0) {
+                clearInterval(countdownInterval);
+                quizForm.submit();
+            }
+
+            updateNavigation();
+        }
+
+        createQuestionDots();
+        restoreAnswers();
+        showQuestion(currentIndex);
+        updateCountdown();
+        countdownInterval = setInterval(updateCountdown, 1000);
+    })();
 </script>
