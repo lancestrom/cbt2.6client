@@ -29,11 +29,10 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
                 <div class="card-header bg-white border-0 px-4 py-3">
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
                         <div>
-                            <h4 class="text-uppercase font-weight-bolder mb-1">Soal</h4>
+                            <h4 class="text-uppercase font-weight-bolder mb-1">Waktu</h4>
                             <h5 class="text-uppercase font-weight-bolder mb-0" id="countdownTimer"><?= $siswa['selisih_menit'] ?>:00</h5>
-                            <p class="text-muted mb-0" id="questionCounter">Soal 1 dari <?= $totalSoal ?></p>
+                            <p class="text-white mb-0" id="questionCounter">Soal 1 dari <?= $totalSoal ?></p>
                         </div>
-                        <div class="d-flex flex-wrap gap-2 mt-3 mt-md-0" id="questionDots"></div>
                     </div>
                 </div>
                 <div class="card-body px-4 py-4">
@@ -121,30 +120,6 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
     .question-slide img {
         max-width: 100%;
         height: auto;
-    }
-
-    #questionDots {
-        min-height: 2rem;
-    }
-
-    .question-dot {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, .65);
-        background: rgba(255, 255, 255, .15);
-        cursor: pointer;
-        transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
-    }
-
-    .question-dot.active {
-        background-color: rgba(255, 255, 255, .95);
-        border-color: rgba(255, 255, 255, .95);
-        transform: scale(1.1);
-    }
-
-    .question-dot:hover {
-        border-color: rgba(255, 255, 255, .95);
     }
 
     .card-header {
@@ -276,12 +251,11 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
         var prevBtn = document.getElementById('prevBtn');
         var submitBtn = document.getElementById('submitBtn');
         var questionCounter = document.getElementById('questionCounter');
-        var questionDots = document.getElementById('questionDots');
         var serverNow = <?= time() ?> * 1000;
         var clientNow = Date.now();
         var serverOffset = serverNow - clientNow;
         var examKey = 'cbt_exam_' + <?= json_encode((string) $siswa['id_jadwal'] . '_' . (string) $siswa['username']) ?>;
-        var delayDuration = 60 * 1000;
+        var delayDuration = 120 * 1000;
         var currentIndex = parseInt(localStorage.getItem(examKey + '_question'), 10);
         var countdownInterval;
 
@@ -318,22 +292,8 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
             return Date.now() + serverOffset;
         }
 
-        function createQuestionDots() {
-            slides.forEach(function(slide, index) {
-                var dot = document.createElement('button');
-                dot.type = 'button';
-                dot.className = 'question-dot';
-                dot.title = 'Soal ' + (index + 1);
-                dot.setAttribute('aria-label', 'Buka soal ' + (index + 1));
-                dot.addEventListener('click', function() {
-                    showQuestion(index);
-                });
-                questionDots.appendChild(dot);
-            });
-        }
-
         function getDelayEnd(index) {
-            var key = examKey + '_delay_' + index;
+            var key = examKey + '_delay_v2_' + index;
             var delayEnd = parseInt(localStorage.getItem(key), 10);
 
             if (isNaN(delayEnd)) {
@@ -352,10 +312,6 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
             nextBtn.disabled = delayRemaining > 0 || isLastQuestion;
             submitBtn.disabled = !isLastQuestion;
             questionCounter.textContent = 'Soal ' + (currentIndex + 1) + ' dari ' + slides.length;
-
-            Array.prototype.forEach.call(questionDots.children, function(dot, index) {
-                dot.classList.toggle('active', index === currentIndex);
-            });
 
             if (delayRemaining > 0) {
                 nextBtn.textContent = 'Tunggu ' + Math.ceil(delayRemaining / 1000) + ' detik';
@@ -426,7 +382,7 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
                 })
                 .join(':');
 
-            if (remaining <= 10 * 60 * 1000) {
+            if (remaining <= 5 * 60 * 1000) {
                 countdownTimer.classList.add('warning');
                 showQuestion(slides.length - 1);
             }
@@ -439,7 +395,6 @@ $selisihWaktu = $waktuMulai->diff($waktuSelesai)->format('%H:%I:%S');
             updateNavigation();
         }
 
-        createQuestionDots();
         restoreAnswers();
         showQuestion(currentIndex);
         updateCountdown();
