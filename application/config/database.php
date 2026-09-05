@@ -29,7 +29,7 @@ $query_builder = TRUE;
 
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => '103.164.110.82',
+	'hostname' => '103.103.20.61',
 	'username' => 'cbt',
 	'password' => 'smktkjTH46',
 	'database' => 'cbt25',
